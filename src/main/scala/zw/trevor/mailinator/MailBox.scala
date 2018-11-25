@@ -10,10 +10,9 @@ abstract class MailBox(val address: Address)(implicit val tableImpl: Table[MailI
         val now: Date = Calendar.getInstance.getTime
         val email = new Email(0, from, address, subject, body, now)
         tableImpl.put(email) match{
-            case None => None //falied
+            case None => None
             case Some(id) => {
                 this.put(id) //i own this
-                println(entries)
                 Some(id) 
             }
         }

@@ -19,7 +19,7 @@ trait Store[K, V]{
 
 trait Table[K, V] extends Store[K, V]{
     //synchronized map for thread safe access
-    private val table: HashMap[K, V] = new HashMap[K, V] with SynchronizedMap[K, V]
+    private[mailinator] val table: HashMap[K, V] = new HashMap[K, V] with SynchronizedMap[K, V]
     //ID Generator for sequential keys
     val idGen: IDGenerator[K]
 

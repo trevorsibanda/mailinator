@@ -28,4 +28,3 @@ trait EvictionPolicy[A] extends Logging{
 abstract class Backend[A, K, V]() extends PostOffice() with Logging{ 
     val evict: EvictionPolicy[V]
 }
-

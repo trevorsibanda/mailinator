@@ -2,7 +2,7 @@ package zw.trevor.mailinator
 
 import MailBox._
 
-abstract class PostOffice() extends Table[Address, MailBox]{
+abstract class PostOffice() extends Table[Address, MailBox] with Logging{
     val tableImpl: Table[MailID, Email]
     def createMailBox: MailBox
 
