@@ -12,8 +12,7 @@ import MailBox._
  * Store emails in Memory
  */
 class HeapBackend() extends Backend[Address, MailID, Email]{
-    val evict: EvictionPolicy[Email] = null
-
+    
     override val tableImpl: Table[MailID, Email] = new Table[MailID, Email] with PageReader[Email]{
         //implement to enable cursor navigation on all emails
         def read(page: Page): PageResult[Email] = ???
@@ -22,7 +21,6 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
             val counter = new AtomicInteger()
             def generate: MailID = (counter.incrementAndGet)
         }
-
         //bad hack. fix this
         //ignores id provided by email and opts for self generated
         override def put(m: Email): Option[MailID] = {
@@ -67,5 +65,29 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
         val rand = scala.util.Random
         def generate: Address = this.rand.alphanumeric.take(10).mkString.toLowerCase + "@heap-mail.com"
     }
+
+    override val evict = new EvictionPolicy[Email]{
+        val frequency = 15.seconds
+        var lastRun = java.util.Calendar.getInstance.getTime
+        def pred(item: Email): Boolean = item.received.before(lastRun)
+        def evict(item: Email) = deleteMail(item.id).isDefined
+
+        val task = new TimerTask{
+            logger info(s"Evictor started at ${java.util.Calendar.getInstance.getTime}")
+            def run() = {
+                val expired = tableImpl.valuesIterator.collect{case x if pred(x) => x}
+                logger info(s"Collected ${expired.size} items to purge")
+                lastRun = java.util.Calendar.getInstance.getTime
+                logger info(s"Eviction started at $lastRun ")
+                expired.foreach{ item => evict(item) match{
+                        case true => logger debug(s"Evicted $item")
+                        case false => logger warn(s"Failed to evict $item")
+                    }
+                }
+                logger info(s"Eviction finished at ${java.util.Calendar.getInstance.getTime}, next run in ${frequency}") 
+            }
+        }
+    }
+    evict.start
 
 }
