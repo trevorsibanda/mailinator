@@ -30,7 +30,5 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
             table.put(id, nM)
             Some(id)
         }
-    }
-
-    
+    }   
 }

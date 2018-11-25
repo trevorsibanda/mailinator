@@ -51,6 +51,7 @@ object Service{
      "id" -> email.id.asJson,
      "from" -> email.from.asJson,
      "to" -> email.from.asJson,
+     "body" -> email.body.asJson,
      "subject" -> email.subject.asJson,
      "received" -> email.received.toString.asJson
    )
