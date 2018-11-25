@@ -26,8 +26,7 @@ trait Table[K, V] extends Store[K, V]{
     def get(k: K): Option[V] = table.get(k)
     def put(v: V): Option[K] = {
         val k = idGen.generate
-        table.put(k, v)
-        Some(k)
+        this.put(k, v)
     }
     def remove(k: K): Option[V] = table.remove(k)
     def keysIterator = table.keysIterator

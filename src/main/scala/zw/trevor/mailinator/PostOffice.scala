@@ -4,6 +4,7 @@ import MailBox._
 
 abstract class PostOffice() extends Table[Address, MailBox]{
     val tableImpl: Table[MailID, Email]
+    def createMailBox: MailBox
 
     //lookup a mailbox based on email address
     def lookup(address: Address): Option[MailBox] = this.get(address)
