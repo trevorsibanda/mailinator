@@ -24,6 +24,10 @@ trait Table[K, V] extends Store[K, V]{
     val idGen: IDGenerator[K]
 
     def get(k: K): Option[V] = table.get(k)
+    def put(k: K, v: V): Option[K] = {
+        this.put(k, v)
+        Some(k)
+    }
     def put(v: V): Option[K] = {
         val k = idGen.generate
         this.put(k, v)
@@ -39,6 +43,8 @@ trait FIFO[V] extends Store[Int, V]{
         case Success(v) => Some(v)
         case Failure(_) => None
     }
+    def put(k: Int, v: V): Option[Int] = ???
+
     def put(v: V): Option[Int] = {
         entries.append(v)
         Some(entries.length)

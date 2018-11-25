@@ -4,13 +4,13 @@ import MailBox._
 
 abstract class PostOffice() extends Table[Address, MailBox] with Logging{
     val tableImpl: Table[MailID, Email]
-    def createMailBox: MailBox
+    def createMailBox(addr: Address): MailBox
 
     //lookup a mailbox based on email address
     def lookup(address: Address): Option[MailBox] = this.get(address)
 
     //create a random mailbox  
-    def createRandom: Option[Address] = this.put(this.createMailBox)
+    def createRandom: Option[Address] = this.put(this.createMailBox(idGen.generate))
     
     //fetch an email given its id
     def fetch(id: MailID): Option[Email] = tableImpl.get(id)
