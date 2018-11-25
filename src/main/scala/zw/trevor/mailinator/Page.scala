@@ -7,6 +7,10 @@ case class Page(cursor: Int, count: Int)
 case class Cursor(prev: Int, next: Option[Int])
 case class PageResult[A](cursor: Cursor, count: Int, results: Iterable[A])
 
+trait IDGenerator[A]{
+    def generate: A
+}
+
 trait Store[K, V]{
     def get(k: K): Option[V]
     def put(k: K, v: V): Option[K]
@@ -16,9 +20,12 @@ trait Store[K, V]{
 trait Table[K, V] extends Store[K, V]{
     //synchronized map for thread safe access
     private val table: HashMap[K, V] = new HashMap[K, V] with SynchronizedMap[K, V]
+    //ID Generator for sequential keys
+    val idGen: IDGenerator[K]
 
     def get(k: K): Option[V] = table.get(k)
-    def put(k: K, v: V): Option[K] = {
+    def put(v: V): Option[K] = {
+        val k = idGen.generate
         table.put(k, v)
         Some(k)
     }
