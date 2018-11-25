@@ -57,7 +57,20 @@ trait PageReader[V]{
     def page(cursor: Int, count: Int): Page = new Page(cursor, count)
     //Id[PageResult[V]]
     def emptyResult = new PageResult[V](Cursor(0, None), 0, Nil)
+    
     //take n items satisfying pred
-
-    def takeNWhile[A](iter: Iterator[A], n: Int)(pred: A => Boolean): Iterable[A]
+    def takeNWhile[A](iter: Iterator[A], n: Int)(pred: A => Boolean): Iterable[A] = {
+        def run(res: Iterable[A], counter: Int): Iterable[A] = {
+            if(counter == n || !iter.hasNext)
+                res
+            else{
+                val curr = iter.next
+                pred(curr) match{
+                    case true =>  run(res ++ Iterable[A](curr), counter+1)
+                    case false => run(res, counter)
+                }
+            }
+        }
+        run(Nil, 0)
+    }
 }
