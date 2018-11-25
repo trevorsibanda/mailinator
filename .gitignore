@@ -1,0 +1,8 @@
+*.class
+*.log
+*.iml
+*.pyc
+/\.target/
+/\.cache
+/\.project
+/\.classpath
