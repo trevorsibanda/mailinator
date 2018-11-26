@@ -37,6 +37,7 @@ abstract class PostOffice() extends Table[Address, MailBox] with Logging{
     def destroyBox(address: Address): Option[Address] = for{
         mbox <- this.lookup(address)
         _ = mbox.purge
+        _ = this.remove(address)
     } yield address
 
     //delete a particular email given its id. Does not perform mbox lookup
