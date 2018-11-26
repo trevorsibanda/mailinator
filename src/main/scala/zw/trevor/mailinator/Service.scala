@@ -27,27 +27,27 @@ class Service[F[_]: Effect] extends Http4sDsl[F] {
 
   val service: HttpService[F] = {
     HttpService[F] {
-      case GET    -> Root/ "mailboxes"/ email / "messages" / IntVar(messageId) => 
+      case GET-> Root/"mailboxes"/email/"messages"/IntVar(messageId) => 
              getMessage(email, messageId).getOrElse(Ok(Err("get_mail", "Mailbox or message does not exist").asJson))
       
-      case GET    -> Root/ "mailboxes"/ email / "messages" / cursor / IntVar(count) => 
+      case GET-> Root/"mailboxes"/email/"messages"/IntVar(cursor)/IntVar(count) => 
              getMessages(email, cursor.toInt, count).getOrElse(Ok(Err("get_mail", "Mailbox does not exist").asJson))
       
-      case GET    -> Root/ "mailboxes"/ email / "messages" => 
+      case GET-> Root/"mailboxes"/email/"messages" => 
              getMessages(email, 0, 10).getOrElse(Ok(Err("get_mail", "Mailbox does not exist").asJson))
       
-      case POST   -> Root/ "mailboxes"   => 
+      case POST-> Root/"mailboxes" => 
              generateAddress.getOrElse(Ok(Err("create_address", "Failed to create mailbox").asJson))
       
-      case req @ POST   -> Root/ "mailboxes"/ address / "messages"      => req.decode[CreateNewEmail]{ cne =>
-        createMessage(address, cne).getOrElse(Ok(Err("create_mail", "Address does not exist").asJson))
-      
-      } 
+      case req @ POST-> Root/"mailboxes"/address/"messages" => 
+            req.decode[CreateNewEmail]{ cne =>
+              createMessage(address, cne).getOrElse(Ok(Err("create_mail", "Address does not exist").asJson))
+            } 
 
-      case DELETE -> Root/ "mailboxes"/ email                          => 
+      case DELETE -> Root/"mailboxes"/email => 
              deleteAddress(email).getOrElse(Ok(Err("delete_address", "Mailbox does not exist").asJson)) 
       
-      case DELETE -> Root/ "mailboxes"/ email / "messages" / IntVar(messageId) => 
+      case DELETE -> Root/"mailboxes"/email/"messages"/IntVar(messageId) => 
              deleteMessage(email, messageId).getOrElse(Ok(Err("delete_mail", "Mailbox or message does not exist").asJson))
     }
   }

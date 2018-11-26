@@ -2,7 +2,7 @@ package zw.trevor.mailinator
 
 import MailBox._
 
-abstract class PostOffice() extends Table[Address, MailBox] with Logging{
+trait PostOffice extends Table[Address, MailBox] with Logging{
     val tableImpl: Table[MailID, Email]
     def createMailBox(addr: Address): MailBox
 
@@ -10,7 +10,11 @@ abstract class PostOffice() extends Table[Address, MailBox] with Logging{
     def lookup(address: Address): Option[MailBox] = this.get(address)
 
     //create a random mailbox  
-    def createRandom: Option[Address] = this.put(this.createMailBox(idGen.generate))
+    def createRandom: Option[Address] = {
+        val addr = idGen.generate
+        this.put(addr, this.createMailBox(addr))
+        Some(addr)
+    }
     
     //fetch an email given its id
     def fetch(id: MailID): Option[Email] = tableImpl.get(id)
@@ -43,7 +47,6 @@ abstract class PostOffice() extends Table[Address, MailBox] with Logging{
     //delete a particular email given its id. Does not perform mbox lookup
     def deleteMail(id: MailID) = for{
         email <- tableImpl.remove(id)
-        //misses in each mailbox will result in deletion
     } yield id
 
 }

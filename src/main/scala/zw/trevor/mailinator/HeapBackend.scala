@@ -21,8 +21,7 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
             val counter = new AtomicInteger()
             def generate: MailID = (counter.incrementAndGet)
         }
-        //bad hack. fix this
-        //ignores id provided by email and opts for self generated
+        
         override def put(m: Email): Option[MailID] = {
             val id = idGen.generate
             val nM = m.copy(id = id)
@@ -36,22 +35,22 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
             val count = if(page.count <= 0) 1 else page.count
             val cursor = if(page.cursor <= 0) entries.headOption.getOrElse(0) else page.cursor  
             val iter = entries.iterator
-            val idx = iter.indexOf(cursor) //unsafe. Walks entire Seq until it reaches cursor, maybe fix??? 
+            val idx = iter.indexOf(cursor) 
             val mail: ArrayBuffer[Email] = ArrayBuffer()
             if(idx != -1) 
                 tableImpl.get(entries(idx)).foreach{ item => mail.append(item)}
 
             var cursorNext: Int = 0
-            takeNWhile[MailID](iter, count){ //result discarded since we are appending to mail. bad, must change
+            takeNWhile[MailID](iter, count){ 
                 case(entry) => 
                     val email = tableImpl.get(entry)            
                     if(email.isDefined){
-                        mail.append(email.get) 
+                        mail.prepend(email.get) //prepend to order by recency
                         cursorNext = entry
                         true
                     } else {
-                        
-                        false //record cache miss
+                        logger warn(s"Cache miss on $entry $this")
+                        false
                     }
             } 
             mail.size match {
@@ -63,7 +62,7 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
                     }  else if(!next.isDefined && mail.size != 1) {
                         (mail, mail.size) 
                     }else 
-                        (mail.init, mail.size-1)
+                        (mail.tail, mail.size-1)
                     new PageResult(Cursor(cursor, next), size, results)
                 }
             }
