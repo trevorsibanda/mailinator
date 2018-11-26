@@ -42,7 +42,7 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
                 tableImpl.get(entries(idx)).foreach{ item => mail.append(item)}
 
             var cursorNext: Int = 0
-            takeNWhile[MailID](iter, count-1/*already fetched one*/){ //result discarded since we are appending to mail. bad, must change
+            takeNWhile[MailID](iter, count){ //result discarded since we are appending to mail. bad, must change
                 case(entry) => 
                     val email = tableImpl.get(entry)            
                     if(email.isDefined){
@@ -56,7 +56,16 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
             } 
             mail.size match {
                 case 0  => new PageResult(Cursor(cursor, None), 0, Nil)
-                case _ => new PageResult(Cursor(cursor, if(iter.hasNext) Some(cursorNext) else None), mail.size, mail)
+                case _ => {
+                    val next = if(iter.hasNext) Some(cursorNext) else None
+                    val (results: ArrayBuffer[Email], size: Int) = if(mail.size == 1){
+                        (mail, 1)
+                    }  else if(!next.isDefined && mail.size != 1) {
+                        (mail, mail.size) 
+                    }else 
+                        (mail.init, mail.size-1)
+                    new PageResult(Cursor(cursor, next), size, results)
+                }
             }
         }
     }  
@@ -67,27 +76,29 @@ class HeapBackend() extends Backend[Address, MailID, Email]{
     }
 
     override val evict = new EvictionPolicy[Email]{
-        val frequency = 15.seconds
-        var lastRun = java.util.Calendar.getInstance.getTime
-        def pred(item: Email): Boolean = item.received.before(lastRun)
+        val frequency = 5.minutes
+        def pred(item: Email): Boolean = {
+            val now = java.util.Calendar.getInstance.toInstant
+            item.received.plusSeconds(frequency.toSeconds).isBefore(now)
+        }
         def evict(item: Email) = deleteMail(item.id).isDefined
 
+
         val task = new TimerTask{
-            logger info(s"Evictor started at ${java.util.Calendar.getInstance.getTime}")
+            logger info(s"Evictor thread started at ${java.util.Calendar.getInstance.toInstant}. Running every ${frequency}")
             def run() = {
-                val expired = tableImpl.valuesIterator.collect{case x if pred(x) => x}
+                val expired = tableImpl.valuesIterator.collect{case x if pred(x) => x}.toList
                 logger info(s"Collected ${expired.size} items to purge")
-                lastRun = java.util.Calendar.getInstance.getTime
-                logger info(s"Eviction started at $lastRun ")
+                val now = java.util.Calendar.getInstance.toInstant
+                logger info(s"Eviction started at $now ")
                 expired.foreach{ item => evict(item) match{
                         case true => logger debug(s"Evicted $item")
                         case false => logger warn(s"Failed to evict $item")
                     }
                 }
-                logger info(s"Eviction finished at ${java.util.Calendar.getInstance.getTime}, next run in ${frequency}") 
+                logger info(s"Eviction finished at ${java.util.Calendar.getInstance.toInstant}, next run in ${frequency}") 
             }
         }
     }
     evict.start
-
 }
