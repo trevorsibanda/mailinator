@@ -1,8 +1,10 @@
 Mailinator service. 
 
+Specification found at https://github.com/fauna/exercises/blob/master/backend.md
+
 Support for both heap and sql backend
 Tested with up to 1,000,000 emails distributed across 500 users.
-    - Tested on Inter Core i7 8th gen with 8GB RAM
+    - Tested on Intel Core i7 8th gen with 8GB RAM
   
 - Steps to run
 
@@ -16,24 +18,24 @@ POST /mailboxes
 Creates a new random address
 
 ```json
-{address: "", when: ""}
+{"address": "", "when": ""}
 ```
 
 POST /mailboxes/:address/messages
 Creates a new email and stores it in `address` mailbox
 Request
 ```json
-{from: "", subject: "", body: ""}
+{"from": "", "subject": "", "body": ""}
 ```
 Response
 ```json
-{id: "", when: ""}
+{"id": "", "when": ""}
 ```
 
 GET /mailboxes/:address/messages
 Gets all emails in :address's mailbox
 ```json
-{cursor:{prev: 1, next: null}, count: 0, results: []}
+{"cursor":{"prev": 1, "next": "null"}, "count": 0, "results": []}
 ```
 
 GET /mailboxes/:address/messages/:cursor/:count
