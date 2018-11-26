@@ -1,13 +1,14 @@
 package zw.trevor.mailinator
-import java.util.{Calendar, Date}
+import java.util.{Calendar}
+import java.time.{Instant}
 import MailBox._
 
-case class Email(val id: MailID, from: String, to: String, subject: String, body: String, received: Date)
+case class Email(val id: MailID, from: String, to: String, subject: String, body: String, received: Instant)
 
 abstract class MailBox(val address: Address)(implicit val tableImpl: Table[MailID, Email]) extends FIFO[MailID] with PageReader[Email] with Logging{
     //create a new email
     def create(from: Address, subject: String, body: String): Option[MailID] = {
-        val now: Date = Calendar.getInstance.getTime
+        val now: Instant = Calendar.getInstance.toInstant
         val email = new Email(0, from, address, subject, body, now)
         tableImpl.put(email) match{
             case None => None
@@ -27,9 +28,9 @@ abstract class MailBox(val address: Address)(implicit val tableImpl: Table[MailI
     def fetchMultiple(page: Page): PageResult[Email] = this.read(page)
 
     //destroy this mailbox and all emails
-    def purge: Unit = this.entries.foreach{ entry =>
-       this.remove(entry)
-       tableImpl.remove(entry)
+    def purge: Unit = { 
+       this.entries.foreach{entry => tableImpl.remove(entry)}
+       this.entries.clear()
     }
 
     //delete a particular email
