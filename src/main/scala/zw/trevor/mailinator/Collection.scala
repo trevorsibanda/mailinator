@@ -25,7 +25,7 @@ trait Table[K, V] extends Store[K, V]{
 
     def get(k: K): Option[V] = table.get(k)
     def put(k: K, v: V): Option[K] = {
-        this.put(k, v)
+        table.put(k, v)
         Some(k)
     }
     def put(v: V): Option[K] = {
